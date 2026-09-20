@@ -54,6 +54,26 @@ public sealed class UserRepository(TaskManagementDbContext context) : IUserRepos
         }
     }
 
+    public async Task<User?> FindByIdAsync(int id, CancellationToken cancellationToken)
+    {
+        try
+        {
+            return await context.Users
+                .AsNoTracking()
+                .Where(row => row.Id == id)
+                .Select(row => new User(row.Id, row.Name, row.Email, row.NormalizedEmail))
+                .SingleOrDefaultAsync(cancellationToken);
+        }
+        catch (OperationCanceledException)
+        {
+            throw;
+        }
+        catch (Exception exception)
+        {
+            throw new UserPersistenceException(exception);
+        }
+    }
+
     public async Task<IReadOnlyList<User>> ListAsync(CancellationToken cancellationToken)
     {
         try

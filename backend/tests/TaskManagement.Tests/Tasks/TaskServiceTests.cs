@@ -45,6 +45,30 @@ public sealed class TaskServiceTests
             service.CreateAsync("Task", 99, null));
         Assert.Empty(repository.Tasks);
     }
+
+    [Fact]
+    public async Task GetById_returns_existing_task()
+    {
+        var expected = new TaskItem(7, "Task", TaskState.Pending, 1, DateTimeOffset.UtcNow, null);
+
+        var result = await new TaskService(new FakeTaskRepository(expected)).GetByIdAsync(7);
+
+        Assert.Equal(expected, result);
+    }
+
+    [Fact]
+    public async Task GetById_rejects_invalid_id()
+    {
+        await Assert.ThrowsAsync<TaskValidationException>(() =>
+            new TaskService(new FakeTaskRepository()).GetByIdAsync(0));
+    }
+
+    [Fact]
+    public async Task GetById_rejects_missing_task()
+    {
+        await Assert.ThrowsAsync<TaskResourceNotFoundException>(() =>
+            new TaskService(new FakeTaskRepository()).GetByIdAsync(7));
+    }
 }
 
 internal sealed class FakeTaskRepository(params TaskItem[] tasks) : ITaskRepository

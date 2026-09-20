@@ -42,6 +42,8 @@ public sealed class ProblemDetailsMiddleware(RequestDelegate next, ILogger<Probl
             (StatusCodes.Status400BadRequest, exception.Message),
         DuplicateUserEmailException =>
             (StatusCodes.Status409Conflict, exception.Message),
+        UserResourceNotFoundException =>
+            (StatusCodes.Status404NotFound, exception.Message),
         TaskResourceNotFoundException =>
             (StatusCodes.Status404NotFound, exception.Message),
         TaskTransitionException transition when transition.Message.Contains("no es válido", StringComparison.OrdinalIgnoreCase) =>

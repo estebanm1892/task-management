@@ -66,6 +66,15 @@ public sealed class TaskService(ITaskRepository repository, TimeProvider? timePr
         return await repository.ListAsync(new TaskFilter(userId, parsedStatus, priority), token);
     }
 
+    public async Task<TaskItem> GetByIdAsync(int id, CancellationToken token = default)
+    {
+        if (id <= 0)
+            throw new TaskValidationException("La tarea solicitada no es válida.");
+
+        return await repository.FindByIdAsync(id, token)
+            ?? throw new TaskResourceNotFoundException("La tarea solicitada no existe.");
+    }
+
     public async Task<TaskItem> ChangeStatusAsync(int id, string? status, CancellationToken token = default)
     {
         if (id <= 0) throw new TaskValidationException("La tarea solicitada no es válida.");

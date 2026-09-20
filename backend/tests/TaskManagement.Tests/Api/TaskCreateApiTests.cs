@@ -28,6 +28,19 @@ public sealed class TaskCreateApiTests
         Assert.Equal("Pending", body.Status);
         Assert.Equal(1, body.UserId);
         Assert.Equal("{\"priority\":\"High\"}", body.AdditionalInfo);
+
+        var locationResponse = await client.GetAsync(response.Headers.Location);
+        Assert.Equal(HttpStatusCode.OK, locationResponse.StatusCode);
+    }
+
+    [Fact]
+    public async Task Get_tasks_returns_404_for_missing_task()
+    {
+        await using var application = new ApiTestApplication();
+
+        var response = await application.CreateClient().GetAsync("/api/tasks/99");
+
+        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
     }
 
     [Fact]

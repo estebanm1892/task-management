@@ -70,13 +70,17 @@ public sealed class SchemaTests
         {
             var directory = new DirectoryInfo(AppContext.BaseDirectory);
 
-            while (directory is not null && !Directory.Exists(Path.Combine(directory.FullName, "specs")))
+            while (directory is not null)
             {
+                var sqlPath = Path.Combine(directory.FullName, "database", "create.sql");
+                var solutionPath = Path.Combine(directory.FullName, "backend", "TaskManagement.sln");
+                if (File.Exists(sqlPath) && File.Exists(solutionPath))
+                    return File.ReadAllText(sqlPath);
+
                 directory = directory.Parent;
             }
 
-            var root = directory?.FullName ?? throw new DirectoryNotFoundException("Repository root was not found.");
-            return File.ReadAllText(Path.Combine(root, "database", "create.sql"));
+            throw new DirectoryNotFoundException("Repository root containing database/create.sql was not found.");
         }
     }
 }

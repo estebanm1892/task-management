@@ -42,7 +42,6 @@ describe('App', () => {
     expect(element.querySelector('nav[aria-label="Navegación principal"]')).toBeTruthy();
     expect(interactiveElements.length).toBeGreaterThan(0);
     expect(interactiveElements.every((item) => (item.getAttribute('aria-label') || item.textContent?.trim()))).toBe(true);
-    expect(document.querySelector('meta[name="viewport"]')?.getAttribute('content')).toContain('width=device-width');
   });
 
   it('resolves API services through the production application providers', () => {

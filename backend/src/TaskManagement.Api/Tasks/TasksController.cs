@@ -13,7 +13,7 @@ public sealed class TasksController(TaskService service) : ControllerBase
     {
         var (title, userId, additionalInfo) = request.ToServiceInput();
         var task = await service.CreateAsync(title, userId, additionalInfo, cancellationToken);
-        return Created($"/api/tasks/{task.Id}", task.ToResponse());
+        return CreatedAtAction("GetById", new { id = task.Id }, task.ToResponse());
     }
 
     [HttpGet]
@@ -25,6 +25,14 @@ public sealed class TasksController(TaskService service) : ControllerBase
     {
         var tasks = await service.ListAsync(userId, status, priority, cancellationToken);
         return Ok(tasks.Select(task => task.ToResponse()).ToArray());
+    }
+
+    [HttpGet("{id:int}")]
+    [ActionName("GetById")]
+    public async Task<ActionResult<TaskResponse>> GetByIdAsync(int id, CancellationToken cancellationToken)
+    {
+        var task = await service.GetByIdAsync(id, cancellationToken);
+        return Ok(task.ToResponse());
     }
 
     [HttpPut("{id:int}/status")]

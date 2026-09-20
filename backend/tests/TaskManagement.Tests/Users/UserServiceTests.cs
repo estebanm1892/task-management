@@ -71,12 +71,39 @@ public sealed class UserServiceTests
         Assert.Equal(users, await populatedService.ListAsync());
     }
 
+    [Fact]
+    public async Task GetById_returns_existing_user()
+    {
+        var expected = new User(7, "Ada", "ada@example.com", "ada@example.com");
+
+        var result = await new UserService(new FakeUserRepository(expected)).GetByIdAsync(7);
+
+        Assert.Equal(expected, result);
+    }
+
+    [Fact]
+    public async Task GetById_rejects_invalid_id()
+    {
+        await Assert.ThrowsAsync<UserValidationException>(() =>
+            new UserService(new FakeUserRepository()).GetByIdAsync(0));
+    }
+
+    [Fact]
+    public async Task GetById_rejects_missing_user()
+    {
+        await Assert.ThrowsAsync<UserResourceNotFoundException>(() =>
+            new UserService(new FakeUserRepository()).GetByIdAsync(7));
+    }
+
     private sealed class FakeUserRepository(params User[] users) : IUserRepository
     {
         public List<User> Users { get; } = [.. users];
 
         public Task<bool> ExistsByNormalizedEmailAsync(string normalizedEmail, CancellationToken cancellationToken) =>
             Task.FromResult(Users.Any(user => user.NormalizedEmail == normalizedEmail));
+
+        public Task<User?> FindByIdAsync(int id, CancellationToken cancellationToken) =>
+            Task.FromResult(Users.SingleOrDefault(user => user.Id == id));
 
         public Task<User> AddAsync(User user, CancellationToken cancellationToken)
         {

@@ -44,6 +44,12 @@ internal sealed class InMemoryUserRepository : IUserRepository
         return Task.FromResult(_users.Any(user => user.NormalizedEmail == normalizedEmail));
     }
 
+    public Task<User?> FindByIdAsync(int id, CancellationToken cancellationToken)
+    {
+        if (FailReads) throw new UserPersistenceException(new InvalidOperationException("database down"));
+        return Task.FromResult(_users.SingleOrDefault(user => user.Id == id));
+    }
+
     public Task<User> AddAsync(User user, CancellationToken cancellationToken)
     {
         if (FailWrites) throw new UserPersistenceException(new InvalidOperationException("database down"));

@@ -22,6 +22,19 @@ public sealed class UserRepositoryTests(SqlServerFixture database) : IClassFixtu
     }
 
     [Fact]
+    public async Task FindById_returns_an_existing_user()
+    {
+        await using var context = CreateContext(database.ConnectionString);
+        var repository = new UserRepository(context);
+        var created = await repository.AddAsync(
+            new User(0, "Katherine Johnson", "find-by-id@example.com", "find-by-id@example.com"), default);
+
+        var result = await repository.FindByIdAsync(created.Id, default);
+
+        Assert.Equal(created, result);
+    }
+
+    [Fact]
     public async Task Concurrent_equivalent_emails_allow_only_one_persisted_user()
     {
         var normalizedEmail = $"concurrent-{Guid.NewGuid():N}@example.com";

@@ -16,8 +16,24 @@ public sealed class UsersApiTests
         var body = await response.Content.ReadFromJsonAsync<UserResponseBody>();
 
         Assert.Equal(HttpStatusCode.Created, response.StatusCode);
-        Assert.Equal("/api/users/1", response.Headers.Location?.OriginalString);
+        Assert.Equal("/api/users/1", response.Headers.Location?.AbsolutePath);
         Assert.Equal((1, "Ana", "ANA@example.com"), (body!.Id, body.Name, body.Email));
+
+        var locationResponse = await client.GetAsync(response.Headers.Location);
+        Assert.Equal(HttpStatusCode.OK, locationResponse.StatusCode);
+    }
+
+    [Fact]
+    public async Task Get_user_returns_404_for_missing_and_400_for_invalid_id()
+    {
+        await using var application = new ApiTestApplication();
+        var client = application.CreateClient();
+
+        var missing = await client.GetAsync("/api/users/99");
+        var invalid = await client.GetAsync("/api/users/0");
+
+        Assert.Equal(HttpStatusCode.NotFound, missing.StatusCode);
+        Assert.Equal(HttpStatusCode.BadRequest, invalid.StatusCode);
     }
 
     [Fact]

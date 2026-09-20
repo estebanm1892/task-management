@@ -128,6 +128,7 @@ node e2e\runtime-flow.mjs
 
 - Crear usuarios con nombre y correo electrónico.
 - Listar usuarios.
+- Consultar un usuario por ID.
 - Validar duplicados de correo normalizado.
 
 ### Tareas
@@ -135,6 +136,7 @@ node e2e\runtime-flow.mjs
 - Crear tareas con título obligatorio.
 - Asignar cada tarea a un usuario existente.
 - Listar tareas.
+- Consultar una tarea por ID.
 - Filtrar tareas por usuario, estado y prioridad.
 - Ordenar tareas por fecha de creación.
 - Cambiar estado de tarea respetando el flujo permitido.
@@ -155,8 +157,10 @@ node e2e\runtime-flow.mjs
 |---|---|---|
 | `POST` | `/api/users` | Crea un usuario. |
 | `GET` | `/api/users` | Lista usuarios. |
+| `GET` | `/api/users/{id}` | Consulta un usuario por ID. |
 | `POST` | `/api/tasks` | Crea una tarea asignada a un usuario. |
 | `GET` | `/api/tasks` | Lista tareas y permite filtros por usuario, estado y prioridad. |
+| `GET` | `/api/tasks/{id}` | Consulta una tarea por ID. |
 | `PUT` | `/api/tasks/{id}/status` | Cambia el estado de una tarea. |
 | `PATCH` | `/api/tasks/{id}/additional-info` | Actualiza una propiedad del JSON adicional de una tarea. |
 

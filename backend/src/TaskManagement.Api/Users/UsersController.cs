@@ -13,7 +13,7 @@ public sealed class UsersController(UserService service) : ControllerBase
     {
         var (name, email) = request.ToServiceInput();
         var user = await service.CreateAsync(name, email, cancellationToken);
-        return Created($"/api/users/{user.Id}", user.ToResponse());
+        return CreatedAtAction("GetById", new { id = user.Id }, user.ToResponse());
     }
 
     [HttpGet]
@@ -21,5 +21,13 @@ public sealed class UsersController(UserService service) : ControllerBase
     {
         var users = await service.ListAsync(cancellationToken);
         return Ok(users.Select(user => user.ToResponse()).ToArray());
+    }
+
+    [HttpGet("{id:int}")]
+    [ActionName("GetById")]
+    public async Task<ActionResult<UserResponse>> GetByIdAsync(int id, CancellationToken cancellationToken)
+    {
+        var user = await service.GetByIdAsync(id, cancellationToken);
+        return Ok(user.ToResponse());
     }
 }
