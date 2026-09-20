@@ -45,8 +45,6 @@ El proyecto prioriza una implementación clara, mantenible y verificable como un
 ├── backend/                  # API .NET, dominio, infraestructura y pruebas
 ├── frontend/task-management/ # Aplicación Angular
 ├── database/create.sql       # Script reproducible de SQL Server
-├── docs/constitution.md      # Principios de ingeniería del proyecto
-├── specs/001-task-management # Especificación, plan y tareas SDD
 └── README.md
 ```
 
