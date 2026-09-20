@@ -1,0 +1,13 @@
+**/bin/
+**/obj/
+**/node_modules/
+**/dist/
+**/.angular/
+.vs/
+# Local workspace metadata
+.atl/
+
+# Project instructions and SDD artifacts kept local
+/AGENTS.md
+/specs/
+/docs/constitution.md

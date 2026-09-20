@@ -1,0 +1,56 @@
+import { Component } from '@angular/core';
+import { RouterLink, RouterOutlet } from '@angular/router';
+
+@Component({
+  imports: [RouterOutlet, RouterLink],
+  selector: 'app-root',
+  template: `
+    <div class="app-shell responsive-shell">
+      <header class="topbar">
+        <div class="brand-block">
+          <span class="brand-badge">TM</span>
+          <div>
+            <p class="eyebrow">Gestión operativa</p>
+            <h1>Task Management</h1>
+          </div>
+        </div>
+
+        <nav class="main-nav" aria-label="Navegación principal">
+          <a routerLink="/users">Usuarios</a>
+          <a routerLink="/tasks">Crear tarea</a>
+          <a routerLink="/task-list">Listado</a>
+        </nav>
+      </header>
+
+      <main class="dashboard">
+        <section class="summary-grid" aria-label="Resumen de tareas">
+          <article class="summary-card pending">
+            <span class="summary-label">Tareas pendientes</span>
+            <strong>12</strong>
+            <small>Revisión necesaria</small>
+          </article>
+
+          <article class="summary-card in-progress">
+            <span class="summary-label">En progreso</span>
+            <strong>7</strong>
+            <small>Trabajando ahora</small>
+          </article>
+
+          <article class="summary-card done">
+            <span class="summary-label">Completadas</span>
+            <strong>26</strong>
+            <small>Terminadas esta semana</small>
+          </article>
+        </section>
+
+        <section class="content-panel">
+          <div class="panel-header">
+            <h2>Panel de trabajo</h2>
+          </div>
+          <router-outlet />
+        </section>
+      </main>
+    </div>
+  `,
+})
+export class App {}
