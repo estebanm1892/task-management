@@ -15,7 +15,6 @@ El proyecto prioriza una implementación clara, mantenible y verificable como un
 - [API REST](#api-rest)
 - [Base de datos y JSON en SQL Server](#base-de-datos-y-json-en-sql-server)
 - [Decisiones técnicas](#decisiones-técnicas)
-- [Alcance y pendientes](#alcance-y-pendientes)
 
 ## Stack técnico
 
