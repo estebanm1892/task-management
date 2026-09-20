@@ -1,40 +1,86 @@
-# Gestión de colaboradores y tareas
+# Sistema de gestión de colaboradores y tareas
 
-Aplicación full-stack con API .NET 8, Angular y SQL Server. Permite registrar colaboradores, crear y consultar tareas, filtrar por estado/prioridad y aplicar el ciclo `Pending → InProgress → Done`.
+Aplicación fullstack con **.NET 8 Web API**, **Angular** y **SQL Server**. La solución permite registrar colaboradores, crear tareas asignadas, consultar y filtrar tareas, y controlar su avance mediante los estados `Pending`, `InProgress` y `Done`.
 
-## Requisitos
+El proyecto prioriza una implementación clara, mantenible y verificable como un MVP: API REST, separación por capas, persistencia reproducible, manejo de errores consistente, frontend funcional y uso de funcionalidades JSON nativas de SQL Server.
 
-- .NET 8 SDK
-- Node.js 24.19.0 y npm 11.17.0 (versiones exactas verificadas; otras versiones no fueron validadas)
-- SQL Server Express con autenticación de Windows
-- SQL Server Tools con el ejecutable ODBC `SQLCMD.EXE`
+## Tabla de contenido
 
-## Puesta en marcha
+- [Stack técnico](#stack-técnico)
+- [Requisitos previos](#requisitos-previos)
+- [Estructura del proyecto](#estructura-del-proyecto)
+- [Configuración y ejecución](#configuración-y-ejecución)
+- [Verificación](#verificación)
+- [Funcionalidades implementadas](#funcionalidades-implementadas)
+- [API REST](#api-rest)
+- [Base de datos y JSON en SQL Server](#base-de-datos-y-json-en-sql-server)
+- [Decisiones técnicas](#decisiones-técnicas)
+- [Alcance y pendientes](#alcance-y-pendientes)
 
-Desde la raíz, crear la base y aplicar el script idempotente:
+## Stack técnico
+
+| Capa | Tecnología |
+|---|---|
+| Backend | .NET 8 Web API |
+| Frontend | Angular |
+| Base de datos | SQL Server Express |
+| API | REST |
+| Pruebas backend | xUnit / ASP.NET Core testing |
+| Pruebas frontend | Angular test runner |
+| Validación UI runtime | Playwright script |
+
+## Requisitos previos
+
+- .NET 8 SDK.
+- Node.js `24.19.0` y npm `11.17.0`.
+- SQL Server Express con autenticación de Windows.
+- SQL Server Tools con el ejecutable ODBC `SQLCMD.EXE`.
+
+> Las versiones de Node.js y npm indicadas son las verificadas durante el desarrollo. Otras versiones pueden funcionar, pero no fueron validadas para esta entrega.
+
+## Estructura del proyecto
+
+```text
+/
+├── backend/                  # API .NET, dominio, infraestructura y pruebas
+├── frontend/task-management/ # Aplicación Angular
+├── database/create.sql       # Script reproducible de SQL Server
+├── docs/constitution.md      # Principios de ingeniería del proyecto
+├── specs/001-task-management # Especificación, plan y tareas SDD
+└── README.md
+```
+
+## Configuración y ejecución
+
+### 1. Crear la base de datos
+
+Desde la raíz del repositorio, ejecutar en PowerShell:
 
 ```powershell
 $sqlcmd = Get-Command sqlcmd.exe -All |
   Where-Object { $_.Source -like '*\Microsoft SQL Server\Client SDK\ODBC\*\Tools\Binn\SQLCMD.EXE' } |
   Select-Object -First 1 -ExpandProperty Source
+
 if (-not $sqlcmd) { throw 'No se encontró SQLCMD.EXE de SQL Server ODBC Tools.' }
 
 & $sqlcmd -S ".\SQLEXPRESS" -E -C -b -d master -Q "IF DB_ID(N'TaskManagement') IS NULL CREATE DATABASE TaskManagement;"
 & $sqlcmd -S ".\SQLEXPRESS" -E -C -b -d TaskManagement -i database\create.sql
 ```
 
-El script reproducible está en [database/create.sql](database/create.sql). Crea `Users` y `Tasks`, define claves primarias y foránea, añade los índices requeridos y es idempotente.
+El script `database/create.sql` es idempotente. Crea las tablas `Users` y `Tasks`, define claves primarias, clave foránea, restricciones, validación JSON e índices requeridos.
 
-En el entorno verificado, el `sqlcmd` moderno basado en Go (v1.10.0) agotó el tiempo de espera al resolver la instancia nombrada `.\SQLEXPRESS`; el `SQLCMD.EXE` ODBC localizado por el comando anterior conectó correctamente. No use el primer `sqlcmd` disponible en `PATH` sin comprobar qué variante es.
+> En el entorno verificado, el `sqlcmd` moderno basado en Go (`v1.10.0`) agotó el tiempo de espera al resolver la instancia nombrada `.\SQLEXPRESS`. El ejecutable ODBC `SQLCMD.EXE` localizado por el comando anterior conectó correctamente. Por eso se recomienda no usar el primer `sqlcmd` disponible en `PATH` sin confirmar la variante.
 
-Iniciar la API:
+### 2. Ejecutar la API
 
 ```powershell
 $env:ConnectionStrings__TaskManagement="Server=.\SQLEXPRESS;Database=TaskManagement;Integrated Security=True;TrustServerCertificate=True"
 dotnet run --project backend\src\TaskManagement.Api --urls http://localhost:5100
 ```
 
-En otra terminal, iniciar Angular con el proxy versionado:
+### 3. Ejecutar el frontend
+
+En otra terminal:
 
 ```powershell
 cd frontend\task-management
@@ -43,41 +89,96 @@ npx playwright install chromium
 npm start -- --port 4200 --proxy-config proxy.conf.json
 ```
 
-Abrir `http://localhost:4200`.
+Abrir la aplicación en:
+
+```text
+http://localhost:4200
+```
 
 ## Verificación
+
+### Backend
 
 ```powershell
 cd backend
 dotnet restore
 dotnet build
 dotnet test
+```
 
-cd ..\frontend\task-management
+### Frontend
+
+```powershell
+cd frontend\task-management
 npm ci
 npm test -- --watch=false
 npm run build
 ```
 
-El flujo UI repetible requiere la API y Angular activos en los puertos anteriores:
+### Flujo UI con API real
+
+Con la API en `http://localhost:5100` y Angular en `http://localhost:4200`:
 
 ```powershell
+cd frontend\task-management
 node e2e\runtime-flow.mjs
 ```
 
-## Diseño y JSON
+## Funcionalidades implementadas
 
-- La API mantiene controladores delgados; Core concentra validación y transiciones; Infrastructure aísla EF Core/SQL Server.
-- `ProblemDetails` unifica errores sin exponer excepciones, SQL ni conexiones.
-- `Tasks.AdditionalInfo` conserva metadatos flexibles; título, estado, usuario y fecha siguen siendo relacionales.
-- `PATCH /api/tasks/{id}/additional-info` actualiza una propiedad JSON, conserva las demás y rechaza propiedades relacionales esenciales.
-- `database/create.sql` valida JSON con `ISJSON`, lee/filtra prioridad con `JSON_VALUE`, devuelve etiquetas con `JSON_QUERY` y las expande con `OPENJSON`.
-- `database/create.sql` incluye una demostración de `JSON_MODIFY` que actualiza `priority` y conserva `tags`.
-- El índice `(UserId, Status, CreatedAt DESC, Id DESC)` soporta filtros combinados y orden determinista.
+### Usuarios
 
-### Ejemplos SQL de JSON en SQL Server
+- Crear usuarios con nombre y correo electrónico.
+- Listar usuarios.
+- Validar duplicados de correo normalizado.
 
-`Tasks.AdditionalInfo` es `NVARCHAR(MAX)`. El script aplica estas restricciones y consultas nativas:
+### Tareas
+
+- Crear tareas con título obligatorio.
+- Asignar cada tarea a un usuario existente.
+- Listar tareas.
+- Filtrar tareas por usuario, estado y prioridad.
+- Ordenar tareas por fecha de creación.
+- Cambiar estado de tarea respetando el flujo permitido.
+- Rechazar la transición directa `Pending -> Done` desde el backend.
+
+### Frontend Angular
+
+- Listado de tareas.
+- Filtro por estado y prioridad.
+- Formulario reactivo para crear tareas.
+- Selección de usuario desde el listado de colaboradores.
+- Cambio de estado de tareas.
+- Visualización básica de errores de API.
+
+## API REST
+
+| Método | Endpoint | Descripción |
+|---|---|---|
+| `POST` | `/api/users` | Crea un usuario. |
+| `GET` | `/api/users` | Lista usuarios. |
+| `POST` | `/api/tasks` | Crea una tarea asignada a un usuario. |
+| `GET` | `/api/tasks` | Lista tareas y permite filtros por usuario, estado y prioridad. |
+| `PUT` | `/api/tasks/{id}/status` | Cambia el estado de una tarea. |
+| `PATCH` | `/api/tasks/{id}/additional-info` | Actualiza una propiedad del JSON adicional de una tarea. |
+
+Los controladores usan DTOs en el límite HTTP y devuelven errores consistentes mediante `ProblemDetails`.
+
+## Base de datos y JSON en SQL Server
+
+La base de datos contiene las tablas `Users` y `Tasks`. La relación entre tareas y usuarios se implementa mediante clave foránea. El índice `(UserId, Status, CreatedAt DESC, Id DESC)` soporta la consulta requerida por usuario, estado y fecha de creación.
+
+La tabla `Tasks` incluye la columna:
+
+```sql
+AdditionalInfo NVARCHAR(MAX) NULL
+```
+
+Esta columna almacena metadatos flexibles de la tarea, como prioridad, fecha estimada de finalización, etiquetas y metadatos libres. Los campos esenciales (`Title`, `Status`, `UserId` y `CreatedAt`) permanecen como columnas relacionales.
+
+### Ejemplos SQL de JSON
+
+El script `database/create.sql` valida y consulta JSON con funciones nativas de SQL Server:
 
 ```sql
 -- Validar que el documento almacenado sea JSON válido.
@@ -104,37 +205,34 @@ DECLARE @Metadata NVARCHAR(MAX) = N'{"priority":"Medium","tags":["backend"]}';
 SELECT JSON_MODIFY(@Metadata, '$.priority', N'High') AS UpdatedJson;
 ```
 
-La columna `AdditionalInfo` conserva prioridad, fechas estimadas, etiquetas y metadatos libres; `Title`, `Status`, `UserId` y `CreatedAt` permanecen como columnas relacionales.
+Funciones demostradas:
 
-## Alcance y pendientes
+- `ISJSON` para validar contenido JSON.
+- `JSON_VALUE` para leer y filtrar propiedades escalares.
+- `JSON_QUERY` para consultar arreglos u objetos JSON.
+- `OPENJSON` para expandir arreglos JSON.
+- `JSON_MODIFY` para demostrar la actualización de una propiedad específica.
 
-El alcance obligatorio está implementado y verificado. Autenticación, roles, eliminación, reasignación y transiciones adicionales están fuera de alcance. `npm ci` reportó una vulnerabilidad alta en el árbol de dependencias; queda pendiente revisar una actualización compatible sin ampliar esta entrega.
+## Decisiones técnicas
 
-## Matriz RF/evidencias
+- **Separación por capas:** la API mantiene controladores delgados; la lógica de negocio y validaciones principales viven en Core; Infrastructure encapsula EF Core y SQL Server.
+- **Reglas de negocio centralizadas:** las transiciones de estado se validan en backend, no únicamente en la interfaz Angular.
+- **DTOs en la frontera HTTP:** la API evita exponer entidades de persistencia como contrato público accidental.
+- **Errores consistentes:** `ProblemDetails` unifica las respuestas de error sin exponer stack traces, cadenas de conexión ni detalles internos.
+- **Persistencia reproducible:** `database/create.sql` permite recrear el esquema, restricciones, índices y ejemplos SQL requeridos.
+- **JSON relacionalmente acotado:** `AdditionalInfo` se usa solo para información flexible; no reemplaza campos esenciales del modelo.
+- **Frontend simple y funcional:** Angular consume la API mediante servicios y usa formularios reactivos para la creación de tareas.
 
-| RF | Evidencia principal | Resultado |
+## Matriz de evidencia
+
+| Requisito | Evidencia principal | Resultado |
 |---|---|---|
-| RF-1 | `UserFlowTests.cs`; alta y duplicado por mayúsculas en UI real | PASS |
-| RF-2 | `UserFlowTests.cs`; selección de colaborador cargada por Angular | PASS |
-| RF-3 | `TaskFlowTests.cs`; creación asignada mediante UI real | PASS |
-| RF-4 | `TaskFlowTests.cs`; listado y filtros API/UI | PASS |
-| RF-5 | consulta SQL y E2E ordenados por fecha descendente | PASS |
-| RF-6 | `StatusFlowTests.cs`; avance UI y salto prohibido | PASS |
-| RF-7 | filtro UI y demostraciones `ISJSON`/`JSON_VALUE`/`JSON_QUERY`/`OPENJSON` | PASS |
-| RF-8 | pruebas API para 400/404; E2E real para 409 y error visible en Angular | PASS |
-| RF-9 | API+SQL reales, consultas posteriores, builds y contrato `ProblemDetails` | PASS |
+| Gestión de usuarios | `UserFlowTests.cs`; alta y listado desde UI real | PASS |
+| Gestión de tareas | `TaskFlowTests.cs`; creación asignada y listado | PASS |
+| Estados y transición prohibida | `StatusFlowTests.cs`; validación backend de `Pending -> Done` | PASS |
+| API REST | Pruebas de controladores y E2E API | PASS |
+| SQL Server | `database/create.sql`; pruebas de esquema y consultas | PASS |
+| JSON en SQL Server | `ISJSON`, `JSON_VALUE`, `JSON_QUERY`, `OPENJSON`, `JSON_MODIFY` | PASS |
+| Frontend Angular | Tests frontend y flujo runtime con API real | PASS |
+| Manejo de errores | Pruebas API para `400`, `404`, `409` y errores visibles en UI | PASS |
 
-### Actualización opcional de JSON
-
-Request:
-
-```json
-{
-  "property": "priority",
-  "value": "High"
-}
-```
-
-Endpoint: `PATCH /api/tasks/{id}/additional-info`.
-
-La operación conserva el resto de `AdditionalInfo`, valida que `priority` sea `Low`, `Medium` o `High`, y rechaza `Title`, `Status`, `UserId` y `CreatedAt`. Las pruebas `TaskAdditionalInfoApiTests` cubren actualización, conservación, tarea inexistente, propiedades esenciales y prioridad inválida.
