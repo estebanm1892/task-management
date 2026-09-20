@@ -31,16 +31,23 @@ public sealed class TaskCreateApiTests
 
         var locationResponse = await client.GetAsync(response.Headers.Location);
         Assert.Equal(HttpStatusCode.OK, locationResponse.StatusCode);
+
+        var locationBody = await locationResponse.Content.ReadFromJsonAsync<TaskResponseBody>();
+        Assert.Equal((body.Id, body.Title, body.Status, body.UserId, body.AdditionalInfo),
+            (locationBody!.Id, locationBody.Title, locationBody.Status, locationBody.UserId, locationBody.AdditionalInfo));
     }
 
     [Fact]
-    public async Task Get_tasks_returns_404_for_missing_task()
+    public async Task Get_tasks_returns_400_for_invalid_id_and_404_for_missing_task()
     {
         await using var application = new ApiTestApplication();
+        var client = application.CreateClient();
 
-        var response = await application.CreateClient().GetAsync("/api/tasks/99");
+        var invalid = await client.GetAsync("/api/tasks/0");
+        var missing = await client.GetAsync("/api/tasks/99");
 
-        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+        Assert.Equal(HttpStatusCode.BadRequest, invalid.StatusCode);
+        Assert.Equal(HttpStatusCode.NotFound, missing.StatusCode);
     }
 
     [Fact]

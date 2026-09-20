@@ -21,6 +21,9 @@ public sealed class UsersApiTests
 
         var locationResponse = await client.GetAsync(response.Headers.Location);
         Assert.Equal(HttpStatusCode.OK, locationResponse.StatusCode);
+
+        var locationBody = await locationResponse.Content.ReadFromJsonAsync<UserResponseBody>();
+        Assert.Equal((body.Id, body.Name, body.Email), (locationBody!.Id, locationBody.Name, locationBody.Email));
     }
 
     [Fact]
