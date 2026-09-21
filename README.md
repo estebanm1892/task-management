@@ -15,6 +15,8 @@ El proyecto prioriza una implementación clara, mantenible y verificable como un
 - [API REST](#api-rest)
 - [Base de datos y JSON en SQL Server](#base-de-datos-y-json-en-sql-server)
 - [Decisiones técnicas](#decisiones-técnicas)
+- [Alcance y pendientes](#alcance-y-pendientes)
+- [Matriz de evidencia](#matriz-de-evidencia)
 
 ## Stack técnico
 
@@ -224,11 +226,25 @@ Funciones demostradas:
 - **JSON relacionalmente acotado:** `AdditionalInfo` se usa solo para información flexible; no reemplaza campos esenciales del modelo.
 - **Frontend simple y funcional:** Angular consume la API mediante servicios y usa formularios reactivos para la creación de tareas.
 
+## Alcance y pendientes
+
+El alcance obligatorio de la prueba técnica está implementado: gestión de usuarios, creación y consulta de tareas, asignación a usuarios existentes, filtros, transición controlada de estados, persistencia en SQL Server, validación de JSON adicional y consumo desde Angular.
+
+Los siguientes puntos se consideran evoluciones fuera de alcance, no fallas de entrega:
+
+- Autenticación, autorización, roles y perfiles de usuario.
+- Edición o eliminación de tareas y usuarios.
+- Reasignación de tareas entre usuarios.
+- Paginación y búsqueda avanzada.
+- Métricas dinámicas de dashboard.
+- Containerización de la solución.
+- Pipelines de CI/CD.
+
 ## Matriz de evidencia
 
 | Requisito | Evidencia principal | Resultado |
 |---|---|---|
-| Gestión de usuarios | `UserFlowTests.cs`; alta y listado desde UI real | PASS |
+| Gestión de usuarios | `UserFlowTests.cs`; flujo de alta y consulta mediante API | PASS |
 | Gestión de tareas | `TaskFlowTests.cs`; creación asignada y listado | PASS |
 | Estados y transición prohibida | `StatusFlowTests.cs`; validación backend de `Pending -> Done` | PASS |
 | API REST | Pruebas de controladores y E2E API | PASS |
@@ -236,4 +252,3 @@ Funciones demostradas:
 | JSON en SQL Server | `ISJSON`, `JSON_VALUE`, `JSON_QUERY`, `OPENJSON`, `JSON_MODIFY` | PASS |
 | Frontend Angular | Tests frontend y flujo runtime con API real | PASS |
 | Manejo de errores | Pruebas API para `400`, `404`, `409` y errores visibles en UI | PASS |
-

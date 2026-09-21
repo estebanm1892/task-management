@@ -22,6 +22,16 @@ public sealed class TaskRepositoryWriteTests(SqlServerFixture database) : IClass
             new TaskItem(0, "Invalid", TaskState.Pending, 1, DateTimeOffset.UtcNow, "not-json"), default));
         Assert.Equal(baseline + 1, await database.ScalarAsync<int>("SELECT COUNT(*) FROM dbo.Tasks;"));
     }
+
+    [Fact]
+    public async Task UserExists_translates_persistence_failures()
+    {
+        await using var context = TaskRepositoryContext.Create(database.ConnectionString);
+        var repository = new TaskRepository(context);
+        await context.DisposeAsync();
+
+        await Assert.ThrowsAsync<TaskPersistenceException>(() => repository.UserExistsAsync(1, default));
+    }
 }
 internal static class TaskRepositoryContext
 {

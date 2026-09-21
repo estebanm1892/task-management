@@ -22,9 +22,9 @@ describe('App', () => {
     const element = fixture.nativeElement as HTMLElement;
     expect(element.querySelector('h1')?.textContent).toContain('Task Management');
     expect(element.querySelectorAll('nav a').length).toBeGreaterThanOrEqual(3);
-    expect(element.textContent).toContain('Tareas pendientes');
-    expect(element.textContent).toContain('En progreso');
-    expect(element.textContent).toContain('Completadas');
+    expect(element.querySelector('.content-panel')).toBeTruthy();
+    expect(element.textContent).toContain('Panel de trabajo');
+    expect(element.querySelector('.summary-grid')).toBeFalsy();
   });
 
   it('exposes a responsive shell and accessible interactive names', async () => {

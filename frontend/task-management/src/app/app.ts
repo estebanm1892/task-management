@@ -23,26 +23,6 @@ import { RouterLink, RouterOutlet } from '@angular/router';
       </header>
 
       <main class="dashboard">
-        <section class="summary-grid" aria-label="Resumen de tareas">
-          <article class="summary-card pending">
-            <span class="summary-label">Tareas pendientes</span>
-            <strong>12</strong>
-            <small>Revisión necesaria</small>
-          </article>
-
-          <article class="summary-card in-progress">
-            <span class="summary-label">En progreso</span>
-            <strong>7</strong>
-            <small>Trabajando ahora</small>
-          </article>
-
-          <article class="summary-card done">
-            <span class="summary-label">Completadas</span>
-            <strong>26</strong>
-            <small>Terminadas esta semana</small>
-          </article>
-        </section>
-
         <section class="content-panel">
           <div class="panel-header">
             <h2>Panel de trabajo</h2>

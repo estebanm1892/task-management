@@ -5,8 +5,15 @@ namespace TaskManagement.Infrastructure.Persistence;
 
 public sealed class TaskRepository(TaskManagementDbContext context) : ITaskRepository
 {
-    public Task<bool> UserExistsAsync(int id, CancellationToken token) =>
-        context.Users.AnyAsync(user => user.Id == id, token);
+    public async Task<bool> UserExistsAsync(int id, CancellationToken token)
+    {
+        try
+        {
+            return await context.Users.AnyAsync(user => user.Id == id, token);
+        }
+        catch (OperationCanceledException) { throw; }
+        catch (Exception exception) { throw new TaskPersistenceException(exception); }
+    }
 
     public async Task<TaskItem> AddAsync(TaskItem task, CancellationToken token)
     {
